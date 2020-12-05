@@ -1,56 +1,65 @@
-from time import sleep
-
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+from selenium.common.exceptions import NoSuchElementException
+import time
 
-names = "job-card-container--clickable"
-path = "/usr/bin/chromedriver"
-url = 'https://www.linkedin.com/jobs/search/?f_LF=f_AL&geoId=102257491&keywords=python%20developer&location=London%2C' \
-      '%20England%2C%20United%20Kingdom&redirect=false&position=1&pageNum=0 '
-driver = webdriver.Chrome(executable_path=path)
-driver.get(url)
+ACCOUNT_EMAIL = YOUR LOGIN EMAIL
+ACCOUNT_PASSWORD = YOUR LOGIN PASSWORD
+PHONE = YOUR PHONE NUMBER
 
+chrome_driver_path = YOUR CHROME DRIVER PATH
+driver = webdriver.Chrome(chrome_driver_path)
+driver.get("https://www.linkedin.com/jobs/search/?f_LF=f_AL&geoId=102257491&keywords=marketing%20intern&location=London%2C%20England%2C%20United%20Kingdom&redirect=false&position=1&pageNum=0")
 
-def login():
-    sleep(10)
-    signin = driver.find_element_by_link_text("Sign in")
-    signin.click()
-    name = driver.find_element_by_name("session_key")
-    password = driver.find_element_by_name("session_password")
-    name.send_keys("dataentrybadar@gmail.com")
-    password.send_keys("Pakistan11")
-    password.send_keys(Keys.ENTER)
+time.sleep(2)
+sign_in_button = driver.find_element_by_link_text("Sign in")
+sign_in_button.click()
 
+time.sleep(5)
+email_field = driver.find_element_by_id("username")
+email_field.send_keys(ACCOUNT_EMAIL)
+password_field = driver.find_element_by_id("password")
+password_field.send_keys(ACCOUNT_PASSWORD)
+password_field.send_keys(Keys.ENTER)
 
-login()
-sleep(20)
-company_list = driver.find_elements_by_class_name(names)
+time.sleep(5)
 
+all_listings = driver.find_elements_by_css_selector(".job-card-container--clickable")
 
-def application_send():
-    easy_button = driver.find_element_by_css_selector(
-        'button[class="jobs-apply-button artdeco-button artdeco-button--3 artdeco-button--primary ember-view"]')
-    easy_button.click()
-    number = driver.find_element_by_name(
-        "urn:li:fs_easyApplyFormElement:(urn:li:fs_normalized_jobPosting:2251558793,9,phoneNumber~nationalNumber)")
-    # uncheck = driver.find_element_by_id("follow-company-checkbox")
-    submit = driver.find_element_by_link_text("Next")
-    # uncheck.click()
-    number.send_keys("234567891")
-    submit.click()
-    submit = driver.find_element_by_link_text("Next")
-    submit.click()
-    experience = driver.find_elements_by_name("urn:li:fs_easyApplyFormElement:(urn:li:fs_normalized_jobPosting:2300331824,14582858,numeric)")
-    experience.send_keys("1")
-    submit = driver.find_element_by_link_text("Review")
-    submit.click()
-    submit = driver.find_element_by_link_text("")
-    submit.click()
+for listing in all_listings:
+    print("called")
+    listing.click()
+    time.sleep(2)
+    try:
+        apply_button = driver.find_element_by_css_selector(".jobs-s-apply button")
+        apply_button.click()
 
-# application_send()
+        time.sleep(5)
+        phone = driver.find_element_by_class_name("fb-single-line-text__input")
+        if phone.text == "":
+            phone.send_keys(PHONE)
+        
+        submit_button = driver.find_element_by_css_selector("footer button")
+        if submit_button.get_attribute("data-control-name") == "continue_unify":
+            close_button = driver.find_element_by_class_name("artdeco-modal__dismiss")
+            close_button.click()
+            
+            time.sleep(2)
+            discard_button = driver.find_elements_by_class_name("artdeco-modal__confirm-dialog-btn")[1]
+            discard_button.click()
+            print("Complex application, skipped.")
+            continue
+        else:
+            submit_button.click()
 
-# print(company_list[0].text)
-for company in company_list:
-    print(company.text)
-    application_send()
-    company.click()
+        time.sleep(2)
+        close_button = driver.find_element_by_class_name("artdeco-modal__dismiss")
+        close_button.click()
+
+    except NoSuchElementException:
+        print("No application button, skipped.")
+        continue
+
+time.sleep(5)
+driver.quit()
+
